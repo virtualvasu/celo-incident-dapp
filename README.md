@@ -11,9 +11,15 @@ A decentralized application (DApp) for professional incident reporting with bloc
 
 **Test application for road incident reporting on Celo Alfajores testnet**
 
-- **Contract Address:** `0x3dd3981F77E91602648f5E2C876176C5F72ACeDe`
+- **Current Contract Address:** `0x3dd3981F77E91602648f5E2C876176C5F72ACeDe`
 - **Block Explorer:** [View on Celo Explorer](https://celo-alfajores.blockscout.com/address/0x3dd3981F77E91602648f5E2C876176C5F72ACeDe)
 - **Network:** Celo Alfajores Testnet
+
+### Previous Deployment
+- **Old Contract Address:** `0x3ab0dCEF4F1A3d005B68F2527F96C47FAb656BAC`
+- **Old Block Explorer:** [View Old Contract on Celo Explorer](https://celo-alfajores.blockscout.com/address/0x3ab0dCEF4F1A3d005B68F2527F96C47FAb656BAC?tab=index)
+
+> **Note:** The contract was migrated to the new address for improved functionality. All new incident reports should use the current contract address.
 
 ## 🔧 Smart Contract Functions
 
