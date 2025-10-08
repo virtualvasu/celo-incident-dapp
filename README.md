@@ -4,7 +4,7 @@ A decentralized application (DApp) for professional incident reporting with bloc
 
 ## 🎬 Demo Video
 
-[![Incident Management DApp Demo](https://img.shields.io/badge/▶️-Watch%20Demo-red?style=for-the-badge)](https://drive.google.com/file/d/1Rf9Ox2f_wQ6P6iWNhmnQ8lZ2BEsSuzAT/view?usp=sharing)
+[![Incident Management DApp Demo](https://img.shields.io/badge/▶️-Watch%20Demo-red?style=for-the-badge)](https://drive.google.com/file/d/1CItMx8zLhsD5Ve6CtUQb3ya4PICwYM8g/view?usp=sharing)
 
 
 ## 🌐 Deployment Details
@@ -12,7 +12,7 @@ A decentralized application (DApp) for professional incident reporting with bloc
 **Test application for road incident reporting on Celo Alfajores testnet**
 
 - **Contract Address:** `0x3dd3981F77E91602648f5E2C876176C5F72ACeDe`
-- **Block Explorer:** [View on Celo Explorer](https://alfajores.celoscan.io/address/0x3dd3981F77E91602648f5E2C876176C5F72ACeDe)
+- **Block Explorer:** [View on Celo Explorer](https://celo-alfajores.blockscout.com/address/0x3dd3981F77E91602648f5E2C876176C5F72ACeDe)
 - **Network:** Celo Alfajores Testnet
 
 ## 🔧 Smart Contract Functions
