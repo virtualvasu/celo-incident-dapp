@@ -1,13 +1,7 @@
 import { useState } from 'react';
 import { FileText, Download, ArrowLeft, ArrowRight, Eye } from 'lucide-react';
 import { generateIncidentPDF } from '../../lib/generateIncidentPDF';
-
-interface IncidentData {
-  location: string;
-  description: string;
-  isElderlyInvolved: boolean;
-  image?: File | null;
-}
+import type { IncidentData } from '../../lib/generateIncidentPDF';
 
 interface PDFGenerationStepProps {
   incidentData: IncidentData;

@@ -1,12 +1,6 @@
 import { useState } from 'react';
 import { MapPin, FileText, Camera, Users, ArrowRight } from 'lucide-react';
-
-interface IncidentData {
-  location: string;
-  description: string;
-  isElderlyInvolved: boolean;
-  image?: File | null;
-}
+import type { IncidentData } from '../../lib/generateIncidentPDF';
 
 interface IncidentFormStepProps {
   data: IncidentData;
