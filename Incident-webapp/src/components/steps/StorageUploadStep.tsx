@@ -1,39 +1,22 @@
 import { useState } from 'react';
 import { Cloud, ArrowLeft, ArrowRight, CheckCircle, Upload, Hash } from 'lucide-react';
 import { create } from '@web3-storage/w3up-client';
-import StorachaConnection from '../StorachaConnection';
 import type { StorachaCredentials } from '../StorachaConnection';
 
 interface StorageUploadStepProps {
   pdfBytes: Uint8Array;
+  storachaCredentials: StorachaCredentials;
   onNext: (cid: string) => void;
   onBack: () => void;
 }
 
-export default function StorageUploadStep({ pdfBytes, onNext, onBack }: StorageUploadStepProps) {
+export default function StorageUploadStep({ pdfBytes, storachaCredentials, onNext, onBack }: StorageUploadStepProps) {
   const [uploadHash, setUploadHash] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [uploadComplete, setUploadComplete] = useState(false);
-  const [storachaCredentials, setStorachaCredentials] = useState<StorachaCredentials | null>(null);
-  const [isStorachaConnected, setIsStorachaConnected] = useState(false);
-
-  const handleStorachaConnect = (credentials: StorachaCredentials) => {
-    if (credentials.email && credentials.spaceDID) {
-      setStorachaCredentials(credentials);
-      setIsStorachaConnected(true);
-    } else {
-      setStorachaCredentials(null);
-      setIsStorachaConnected(false);
-    }
-  };
 
   const handleUpload = async () => {
-    if (!storachaCredentials) {
-      alert('Please connect your Storacha account first.');
-      return;
-    }
-
     setIsUploading(true);
     setProgress(0);
 
@@ -110,16 +93,22 @@ export default function StorageUploadStep({ pdfBytes, onNext, onBack }: StorageU
         </div>
       </div>
 
+      {/* Connected Storage Info */}
+      <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+        <div className="flex items-center space-x-3">
+          <CheckCircle className="w-5 h-5 text-green-600" />
+          <div>
+            <p className="font-medium text-green-900">Storage Account Connected</p>
+            <p className="text-sm text-green-700">
+              Ready to upload to IPFS via {storachaCredentials.email}
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Upload Section */}
       <div className="space-y-6">
-        {/* Storacha Connection */}
-        <StorachaConnection
-          onConnect={handleStorachaConnect}
-          isConnected={isStorachaConnected}
-          credentials={storachaCredentials || undefined}
-        />
-
-        {isStorachaConnected && !uploadComplete && (
+        {!uploadComplete && (
           <div>
             {/* Upload Progress */}
             {isUploading && (
@@ -152,7 +141,7 @@ export default function StorageUploadStep({ pdfBytes, onNext, onBack }: StorageU
             <div className="text-center">
               <button
                 onClick={handleUpload}
-                disabled={isUploading || !isStorachaConnected}
+                disabled={isUploading}
                 className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white font-semibold py-4 px-8 rounded-lg shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200 focus:ring-4 focus:ring-purple-300 flex items-center justify-center space-x-2 mx-auto"
               >
                 {isUploading ? (
@@ -185,7 +174,7 @@ export default function StorageUploadStep({ pdfBytes, onNext, onBack }: StorageU
         )}
 
         {/* Upload Success */}
-        {isStorachaConnected && uploadComplete && (
+        {uploadComplete && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-6">
             <div className="flex items-start space-x-4">
               <CheckCircle className="w-8 h-8 text-green-600 flex-shrink-0 mt-1" />

@@ -1,49 +1,52 @@
 import { useState } from 'react';
 import { ChevronRight, CheckCircle, ArrowLeft } from 'lucide-react';
+import { ethers } from 'ethers';
+import InitialSetupStep from './steps/InitialSetupStep';
 import IncidentFormStep from './steps/IncidentFormStep';
 import PDFGenerationStep from './steps/PDFGenerationStep';
 import StorageUploadStep from './steps/StorageUploadStep';
 import ContractSubmissionStep from './steps/ContractSubmissionStep';
 import SuccessSummaryStep from './steps/SuccessSummaryStep';
 import type { StorachaCredentials } from './StorachaConnection';
-
-export interface IncidentData {
-  location: string;
-  description: string;
-  isElderlyInvolved: boolean;
-  image?: File | null;
-}
+import type { IncidentData } from '../lib/generateIncidentPDF';
 
 export interface WizardData {
+  walletAddress: string;
+  contract: ethers.Contract | null;
+  storachaCredentials: StorachaCredentials | null;
   incidentData: IncidentData;
   pdfBytes: Uint8Array | null;
   storachaCID: string;
-  storachaCredentials: StorachaCredentials | null;
   contractData: any;
 }
 
 const STEPS = [
-  { id: 1, title: 'Incident Details', description: 'Report incident information' },
-  { id: 2, title: 'Generate Report', description: 'Create PDF document' },
-  { id: 3, title: 'Upload to Storage', description: 'Store on IPFS network' },
-  { id: 4, title: 'Submit to Contract', description: 'Record on blockchain' },
-  { id: 5, title: 'Complete', description: 'View summary' }
+  { id: 1, title: 'Setup Services', description: 'Connect wallet and storage' },
+  { id: 2, title: 'Incident Details', description: 'Report incident information' },
+  { id: 3, title: 'Generate Report', description: 'Create PDF document' },
+  { id: 4, title: 'Upload to Storage', description: 'Store on IPFS network' },
+  { id: 5, title: 'Submit to Contract', description: 'Record on blockchain' },
+  { id: 6, title: 'Complete', description: 'View summary' }
 ];
+
+const createInitialWizardData = (): WizardData => ({
+  walletAddress: '',
+  contract: null,
+  storachaCredentials: null,
+  incidentData: {
+    location: '',
+    description: '',
+    isElderlyInvolved: false,
+    image: null
+  },
+  pdfBytes: null,
+  storachaCID: '',
+  contractData: null
+});
 
 export default function IncidentWizard({ onBackToHome }: { onBackToHome?: () => void }) {
   const [currentStep, setCurrentStep] = useState(1);
-  const [wizardData, setWizardData] = useState<WizardData>({
-    incidentData: {
-      location: '',
-      description: '',
-      isElderlyInvolved: false,
-      image: null
-    },
-    pdfBytes: null,
-    storachaCID: '',
-    storachaCredentials: null,
-    contractData: null
-  });
+  const [wizardData, setWizardData] = useState<WizardData>(createInitialWizardData());
 
   const updateWizardData = (updates: Partial<WizardData>) => {
     setWizardData(prev => ({ ...prev, ...updates }));
@@ -62,12 +65,28 @@ export default function IncidentWizard({ onBackToHome }: { onBackToHome?: () => 
   };
 
   const goToStep = (step: number) => {
-    setCurrentStep(step);
+    // Only allow going to previous steps or the current step
+    if (step <= currentStep) {
+      setCurrentStep(step);
+    }
   };
 
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
+        return (
+          <InitialSetupStep
+            onNext={(setupData: { walletAddress: string; contract: ethers.Contract; storachaCredentials: StorachaCredentials }) => {
+              updateWizardData({ 
+                walletAddress: setupData.walletAddress,
+                contract: setupData.contract,
+                storachaCredentials: setupData.storachaCredentials
+              });
+              nextStep();
+            }}
+          />
+        );
+      case 2:
         return (
           <IncidentFormStep
             data={wizardData.incidentData}
@@ -77,7 +96,7 @@ export default function IncidentWizard({ onBackToHome }: { onBackToHome?: () => 
             }}
           />
         );
-      case 2:
+      case 3:
         return (
           <PDFGenerationStep
             incidentData={wizardData.incidentData}
@@ -88,10 +107,11 @@ export default function IncidentWizard({ onBackToHome }: { onBackToHome?: () => 
             onBack={previousStep}
           />
         );
-      case 3:
+      case 4:
         return (
           <StorageUploadStep
             pdfBytes={wizardData.pdfBytes!}
+            storachaCredentials={wizardData.storachaCredentials!}
             onNext={(cid: string) => {
               updateWizardData({ storachaCID: cid });
               nextStep();
@@ -99,10 +119,12 @@ export default function IncidentWizard({ onBackToHome }: { onBackToHome?: () => 
             onBack={previousStep}
           />
         );
-      case 4:
+      case 5:
         return (
           <ContractSubmissionStep
             pdfCID={`https://w3s.link/ipfs/${wizardData.storachaCID}`}
+            contract={wizardData.contract!}
+            walletAddress={wizardData.walletAddress}
             onNext={(contractData: any) => {
               updateWizardData({ contractData });
               nextStep();
@@ -110,24 +132,13 @@ export default function IncidentWizard({ onBackToHome }: { onBackToHome?: () => 
             onBack={previousStep}
           />
         );
-      case 5:
+      case 6:
         return (
           <SuccessSummaryStep
             wizardData={wizardData}
             onRestart={() => {
               setCurrentStep(1);
-              setWizardData({
-                incidentData: {
-                  location: '',
-                  description: '',
-                  isElderlyInvolved: false,
-                  image: null
-                },
-                pdfBytes: null,
-                storachaCID: '',
-                storachaCredentials: null,
-                contractData: null
-              });
+              setWizardData(createInitialWizardData());
             }}
             onBackToHome={onBackToHome}
           />
@@ -175,12 +186,13 @@ export default function IncidentWizard({ onBackToHome }: { onBackToHome?: () => 
                   <div className="flex flex-col items-center">
                     <button
                       onClick={() => goToStep(step.id)}
+                      disabled={step.id > currentStep}
                       className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-colors duration-200 ${
                         currentStep > step.id
-                          ? 'bg-green-600 text-white'
+                          ? 'bg-green-600 text-white hover:bg-green-700'
                           : currentStep === step.id
                           ? 'bg-blue-600 text-white'
-                          : 'bg-gray-200 text-gray-500 hover:bg-gray-300'
+                          : 'bg-gray-200 text-gray-500 cursor-not-allowed'
                       }`}
                     >
                       {currentStep > step.id ? (

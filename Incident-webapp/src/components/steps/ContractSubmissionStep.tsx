@@ -1,186 +1,25 @@
 import { useState } from 'react';
-import { Wallet, ArrowLeft, ArrowRight, CheckCircle, AlertTriangle, Hash, Clock, User, FileText, Shield } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle, Hash, Clock, User, FileText, Shield } from 'lucide-react';
 import { ethers } from 'ethers';
 
 declare global {
-    interface Window {
-        ethereum?: any;
-    }
-}
-
-const abi: any[] = [
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "id",
-                "type": "uint256"
-            },
-            {
-                "indexed": false,
-                "internalType": "string",
-                "name": "description",
-                "type": "string"
-            },
-            {
-                "indexed": false,
-                "internalType": "address",
-                "name": "reportedBy",
-                "type": "address"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "timestamp",
-                "type": "uint256"
-            }
-        ],
-        "name": "IncidentReported",
-        "type": "event"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "_id",
-                "type": "uint256"
-            }
-        ],
-        "name": "getIncident",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            },
-            {
-                "internalType": "string",
-                "name": "",
-                "type": "string"
-            },
-            {
-                "internalType": "address",
-                "name": "",
-                "type": "address"
-            },
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "incidentCounter",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "name": "incidents",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "id",
-                "type": "uint256"
-            },
-            {
-                "internalType": "string",
-                "name": "description",
-                "type": "string"
-            },
-            {
-                "internalType": "address",
-                "name": "reportedBy",
-                "type": "address"
-            },
-            {
-                "internalType": "uint256",
-                "name": "timestamp",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "string",
-                "name": "_description",
-                "type": "string"
-            }
-        ],
-        "name": "reportIncident",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    }
-];
-
-const contractAddress = "0x3dd3981F77E91602648f5E2C876176C5F72ACeDe";
-
-interface ContractSubmissionStepProps {
+  interface Window {
+    ethereum?: any;
+  }
+}interface ContractSubmissionStepProps {
   pdfCID: string;
+  contract: ethers.Contract;
+  walletAddress: string;
   onNext: (contractData: any) => void;
   onBack: () => void;
 }
 
-export default function ContractSubmissionStep({ pdfCID, onNext, onBack }: ContractSubmissionStepProps) {
-  const [contract, setContract] = useState<ethers.Contract | null>(null);
-  const [walletAddress, setWalletAddress] = useState<string>('');
-  const [isConnecting, setIsConnecting] = useState(false);
+export default function ContractSubmissionStep({ pdfCID, contract, walletAddress, onNext, onBack }: ContractSubmissionStepProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionComplete, setSubmissionComplete] = useState(false);
   const [contractData, setContractData] = useState<any>(null);
 
-  const connectWallet = async () => {
-    if (!window.ethereum) {
-      alert("Please install MetaMask to continue");
-      return;
-    }
-
-    setIsConnecting(true);
-    try {
-      const browserProvider = new ethers.BrowserProvider(window.ethereum);
-      const accounts = await browserProvider.send("eth_requestAccounts", []);
-      const signer = await browserProvider.getSigner();
-      const contract = new ethers.Contract(contractAddress, abi, signer);
-      
-      setContract(contract);
-      setWalletAddress(accounts[0]);
-    } catch (error) {
-      console.error('Wallet connection error:', error);
-      alert("Failed to connect wallet. Please try again.");
-    } finally {
-      setIsConnecting(false);
-    }
-  };
-
   const handleSubmitToContract = async () => {
-    if (!contract) {
-      alert("Please connect your wallet first");
-      return;
-    }
-
     setIsSubmitting(true);
     try {
       const tx = await contract.reportIncident(pdfCID);
@@ -231,7 +70,7 @@ export default function ContractSubmissionStep({ pdfCID, onNext, onBack }: Contr
           <div className="flex items-center justify-between">
             <span className="text-gray-500">Contract Address:</span>
             <code className="bg-white px-2 py-1 rounded border text-xs font-mono">
-              {contractAddress}
+              {String(contract.target)}
             </code>
           </div>
           <div className="flex items-center justify-between">
@@ -243,38 +82,8 @@ export default function ContractSubmissionStep({ pdfCID, onNext, onBack }: Contr
         </div>
       </div>
 
-      {/* Wallet Connection */}
-      {!walletAddress ? (
-        <div className="text-center space-y-4">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <div className="flex items-center justify-center space-x-2 mb-2">
-              <AlertTriangle className="w-5 h-5 text-yellow-600" />
-              <span className="font-medium text-yellow-800">Wallet Required</span>
-            </div>
-            <p className="text-sm text-yellow-700">
-              Connect your wallet to submit the incident report to the blockchain
-            </p>
-          </div>
-
-          <button
-            onClick={connectWallet}
-            disabled={isConnecting}
-            className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white font-semibold py-4 px-8 rounded-lg shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200 focus:ring-4 focus:ring-indigo-300 flex items-center justify-center space-x-2 mx-auto"
-          >
-            {isConnecting ? (
-              <>
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span>Connecting...</span>
-              </>
-            ) : (
-              <>
-                <Wallet className="w-5 h-5" />
-                <span>Connect Wallet</span>
-              </>
-            )}
-          </button>
-        </div>
-      ) : !submissionComplete ? (
+      {/* Wallet Status & Submission */}
+      {!submissionComplete ? (
         <div className="space-y-6">
           {/* Connected Wallet */}
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
